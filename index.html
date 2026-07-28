@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Note</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --card: #ffffff;
+  --text: #333333;
+  --text-secondary: #999999;
+  --accent: #666666;
+  --accent-light: #f5f5f5;
+  --border: #eeeeee;
+  --red: #c75b5b;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  --font-sans: 'Microsoft YaHei', '微软雅黑', sans-serif;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 20px 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ─── Calendar ─── */
+.cal-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px; font-size: 13px; color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--card); box-shadow: var(--shadow);
+}
+.cal-today { font-weight: 500; }
+.cal-toggle { cursor: pointer; color: var(--accent); font-size: 12px; }
+.cal-toggle:hover { opacity: 0.7; }
+
+.cal-panel {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 12px; background: var(--card); box-shadow: var(--shadow);
+  animation: fadeIn .15s;
+}
+.cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.cal-month { font-size: 14px; font-weight: 500; color: var(--text); }
+.cal-nav {
+  border: none; background: transparent; color: var(--text-secondary);
+  font-size: 14px; cursor: pointer; padding: 2px 6px; border-radius: 4px;
+}
+.cal-nav:hover { background: var(--accent-light); }
+
+.cal-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  font-size: 10px; color: var(--text-secondary); text-align: center;
+  margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid var(--border);
+}
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+}
+.cal-cell {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; border-radius: 6px; cursor: pointer; color: var(--text);
+  transition: background .1s;
+}
+.cal-cell:hover { background: var(--accent-light); }
+.cal-cell.other { color: #ddd; cursor: default; }
+.cal-cell.today { font-weight: 500; color: #4a90d9 !important; }
+.cal-cell.has-records { background: #f7f7f7; border: none; }
+.cal-cell.has-records:hover { background: #eeeeee; }
+.cal-cell.selected { background: #e8e8e8 !important; color: var(--text); }
+.cal-cell.selected:not(.has-records) {
+  background: transparent !important;
+  border: 1px solid var(--border);
+}
+
+.cal-actions { margin-top: 8px; text-align: center; }
+.cal-clear { font-size: 11px; color: var(--text-secondary); cursor: pointer; }
+.cal-clear:hover { color: var(--accent); }
+
+/* ─── Time Filter ─── */
+.time-filter {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 0;
+}
+.tf-input {
+  flex: 1; border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 6px; font-size: 11px; font-family: var(--font-sans);
+  outline: none; background: #fff; color: var(--text-secondary);
+}
+.tf-input:focus { border-color: #ccc; }
+.tf-input::-webkit-calendar-picker-indicator { opacity: 0.4; cursor: pointer; }
+.tf-input::-webkit-datetime-edit { font-size: 10px; }
+.tf-sep { font-size: 11px; color: var(--text-secondary); flex-shrink: 0; }
+.tf-btn {
+  padding: 4px 10px; border-radius: 6px; border: none;
+  font-size: 11px; cursor: pointer; background: var(--accent); color: #fff;
+}
+.tf-btn:hover { opacity: 0.85; }
+.tf-btn.tf-clear { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+
+.cal-range { display: flex; align-items: center; gap: 6px; margin-top: 8px; justify-content: center; }
+.cal-date {
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 2px 4px; font-size: 11px; font-family: var(--font-sans);
+  outline: none; background: #fff; width: 130px;
+}
+.cal-date::-webkit-calendar-picker-indicator { opacity: 0.4; cursor: pointer; }
+.cal-date::-webkit-datetime-edit { font-size: 10px; }
+
+/* ─── Input Card ─── */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.input-row { display: flex; gap: 8px; align-items: center; }
+.input-row input {
+  flex: 1; border: none; outline: none;
+  font-size: 16px; font-family: var(--font-sans);
+  color: var(--text); background: transparent; padding: 4px 0;
+}
+.input-row input::placeholder { color: var(--text-secondary); }
+
+.btn-primary {
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 20px;
+  padding: 8px 18px; font-size: 14px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: opacity .15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+.input-clear {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: none; background: transparent;
+  color: var(--text-secondary); font-size: 12px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; opacity: 0; transition: opacity .15s, background .15s;
+}
+.input-row:focus-within .input-clear,
+.input-clear.show { opacity: 0.5; }
+.input-clear:hover { opacity: 1 !important; background: #f0f0f0; }
+
+/* ─── Phrase Tags ─── */
+.phrase-area {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 28px;
+}
+
+.phrase-tag {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 3px 10px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 14px;
+  font-size: 11px; line-height: 1; color: var(--text-secondary);
+  cursor: pointer; transition: all .15s; user-select: none;
+}
+.phrase-tag:hover { background: var(--accent-light); color: var(--accent); }
+.phrase-tag.dragging { opacity: 0.35; }
+.phrase-tag.drag-over { border-color: #bbbbbb; background: #f5f5f5; }
+
+.phrase-tag .del-phrase {
+  position: absolute; top: -6px; right: -6px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #999; color: #fff;
+  font-size: 9px; line-height: 16px; text-align: center;
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity .15s, background .15s;
+}
+.phrase-tag.active .del-phrase { opacity: 1; pointer-events: auto; }
+.phrase-tag .del-phrase:hover { opacity: 1; background: var(--red); }
+
+.phrase-add {
+  display: inline-flex; width: 26px; height: 26px; border-radius: 50%;
+  border: 1px dashed var(--border); background: transparent;
+  color: var(--text-secondary); font-size: 16px;
+  cursor: pointer; align-items: center; justify-content: center; transition: all .15s;
+}
+.phrase-add:hover { border-color: #bbbbbb; color: var(--accent); background: var(--accent-light); }
+
+/* ─── Interval Bar ─── */
+.interval-bar {
+  display: none;
+  padding: 10px 14px;
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  animation: fadeIn .2s;
+}
+.interval-bar.show { display: block; }
+
+.interval-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.interval-row + .interval-row { margin-top: 8px; }
+
+.interval-time {
+  flex: 1;
+  font-size: 14px; font-weight: 600;
+  color: var(--accent); white-space: nowrap;
+}
+
+.interval-remark {
+  border: none; border-radius: 8px;
+  padding: 4px 8px; font-size: 16px;
+  font-family: var(--font-sans); color: var(--text);
+  background: var(--accent-light); outline: none;
+  transition: background .15s;
+}
+.interval-remark::placeholder { color: #ccc; font-size: 11px; }
+.interval-remark:focus { background: #e8e8e8; }
+.interval-remark-full { width: 100%; flex: none; }
+
+.interval-cat-wrapper { position: relative; flex: 1; }
+
+.interval-cat {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 4px 24px 4px 10px; font-size: 12px;
+  font-family: var(--font-sans); color: var(--text-secondary);
+  background: #fff; outline: none; cursor: pointer; user-select: none;
+  transition: border-color .15s;
+}
+.interval-cat::after {
+  content: '';
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #999;
+  pointer-events: none;
+}
+.interval-cat:hover { border-color: var(--border); }
+.interval-cat:focus { border-color: var(--border); }
+
+.interval-cat-full { width: 100%; flex: none; }
+
+.interval-cat-drop {
+  display: none;
+  position: absolute; left: 0; right: 0; top: 100%;
+  margin-top: -5px;
+  border: 1px solid var(--border); border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: #fff;
+  z-index: 50;
+  overflow: hidden;
+  animation: fadeIn .12s;
+}
+.interval-cat-drop.show { display: block; }
+
+.interval-cat-option {
+  padding: 6px 10px; font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: background .1s;
+}
+.interval-cat-option:hover { background: var(--accent-light); color: var(--text); }
+.interval-cat-option.selected { color: var(--accent); font-weight: 500; }
+
+.btn-save {
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 14px;
+  padding: 5px 14px; font-size: 12px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: opacity .15s;
+}
+.btn-save:hover { opacity: 0.85; }
+
+/* ─── Record List ─── */
+.records { display: flex; flex-direction: column; gap: 6px; }
+
+.record-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--card); border-radius: var(--radius);
+  padding: 10px 14px; box-shadow: var(--shadow);
+  border: 1px solid var(--border); transition: border-color .15s; animation: fadeIn .2s;
+}
+.record-item.selected { border-color: #e5e5e5; background: var(--accent-light); }
+.record-item.active { border-color: var(--border); background: #fafafa; }
+.record-item.linked {
+  --link-color: #d4a95a;
+  border-color: var(--link-color) !important;
+  background: #fef9f0;
+}
+.record-item.used .select-circle { opacity: 0.3; cursor: not-allowed; border-color: var(--border); }
+
+.drill-item:hover .select-circle { cursor: default; }
+
+.select-circle {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--border); flex-shrink: 0;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+  align-self: center;
+}
+.record-item.selected .select-circle { border-color: #cccccc; background: #cccccc; }
+.record-item.selected .select-circle::after {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff;
+}
+
+.record-body { flex: 1; min-width: 0; }
+.record-content { font-size: 15px; line-height: 1.5; word-break: break-word; color: #2a2a2a; cursor: pointer; }
+.record-content:hover { color: var(--accent); }
+
+.record-content-input {
+  font-size: 15px; line-height: 1.5; font-family: var(--font-sans);
+  border: none; outline: none; width: 100%; color: var(--text);
+  background: transparent; padding: 0;
+}
+.record-meta { display: flex; align-items: center; gap: 8px; margin-top: 2px; font-size: 11px; color: var(--text-secondary); }
+.record-time {
+  font-size: 11px; white-space: nowrap; font-family: var(--font-sans);
+  color: var(--text-secondary); cursor: pointer;
+}
+.record-time:hover { color: var(--accent); }
+.record-time edit { color: var(--text); }
+
+.record-time-input {
+  font-size: 11px; white-space: nowrap; font-family: var(--font-sans);
+  border: none; outline: none; background: transparent; color: var(--text-secondary);
+  padding: 0; margin: 0; width: 142px;
+  appearance: none; -webkit-appearance: none;
+}
+.record-time-input:focus { color: var(--text); }
+.record-time-input::-webkit-calendar-picker-indicator { opacity: 0.4; cursor: pointer; }
+.record-time-input::-webkit-datetime-edit { font-size: 11px; }
+
+.record-del {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+  border: none; background: transparent; color: var(--text-secondary);
+  font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: all .15s; margin-top: -1px;
+}
+.record-item.active .record-del { opacity: 0.4; pointer-events: auto; }
+.record-del:hover { opacity: 1 !important; color: var(--red); background: rgba(199,91,91,0.08); }
+
+/* ─── Statistics ─── */
+.stats-section {
+  display: block;
+  background: var(--card); border-radius: var(--radius);
+  padding: 14px 16px; box-shadow: var(--shadow);
+  border: 1px solid var(--border); animation: fadeIn .2s;
+}
+.stats-section.show { display: block; }
+
+.stats-toggle {
+  font-size: 13px; color: var(--text-secondary); cursor: pointer;
+  text-align: center; padding: 8px; border-radius: var(--radius);
+  border: 1px dashed var(--border); transition: all .15s;
+}
+.stats-toggle:hover { color: var(--accent); border-color: #ccc; background: var(--accent-light); }
+
+.stats-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+}
+.stats-header h3 { font-size: 15px; font-weight: 600; }
+.cat-mgr-btn {
+  font-size: 12px; color: var(--text-secondary); cursor: pointer;
+  padding: 3px 8px; border-radius: 10px; border: 1px solid var(--border);
+  transition: all .15s;
+}
+.cat-mgr-btn:hover { color: var(--accent); border-color: #ccc; background: var(--accent-light); }
+
+.cat-mgr-panel {
+  margin-bottom: 12px; padding: 10px;
+  background: var(--accent-light); border-radius: 10px;
+  animation: fadeIn .15s;
+}
+.cat-mgr-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.cat-mgr-item {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; background: #fff; border: 1px solid var(--border);
+  border-radius: 12px; font-size: 11px;
+}
+.cat-mgr-item input {
+  border: none; outline: none; font-size: 11px; font-family: var(--font-sans);
+  background: transparent; width: auto; color: var(--text);
+}
+.cat-mgr-item button {
+  width: 16px; height: 16px; border-radius: 50%; border: none;
+  background: transparent; color: var(--text-secondary); font-size: 10px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.cat-mgr-item button:hover { color: var(--red); background: rgba(199,91,91,0.08); }
+.cat-mgr-input {
+  flex: 1; border: 1px solid var(--border); border-radius: 8px;
+  padding: 4px 8px; font-size: 12px; font-family: var(--font-sans);
+  outline: none; background: #fff;
+}
+.cat-mgr-input:focus { border-color: #ccc; }
+.stats-close {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: none; background: transparent; color: var(--text-secondary);
+  cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+}
+.stats-close:hover { background: var(--accent-light); }
+
+.stats-summary {
+  font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;
+}
+
+.stats-bars { display: flex; flex-direction: column; gap: 4px; }
+
+.stats-bar-row {
+  display: flex; flex-direction: column; gap: 2px;
+  cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: background .1s;
+}
+.stats-bar-row:hover { background: var(--accent-light); }
+.stats-bar-row.active { background: var(--accent-light); }
+
+.stats-bar-track { flex: 1; height: 18px; background: #f5f5f5; border-radius: 4px; overflow: hidden; position: relative; }
+.stats-bar-fill { height: 100%; border-radius: 4px; transition: width .3s; min-width: 2px; }
+.stats-bar-bottom { display: flex; align-items: center; justify-content: space-between; }
+.stats-label { font-size: 11px; color: var(--text-secondary); }
+.stats-count { font-size: 11px; color: var(--text-secondary); }
+
+/* Drill-down */
+.stats-drill {
+  display: none; margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border); animation: fadeIn .2s; max-height: 250px; overflow-y: auto;
+}
+.stats-drill.show { display: block; }
+
+.stats-drill-header {
+  font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;
+}
+
+.drill-item {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 8px; border-radius: 8px; font-size: 13px;
+  border-left: 3px solid transparent; transition: border-color .15s, background .15s;
+  border-bottom: 1px solid #fafafa;
+}
+.drill-item:hover { border-left-color: var(--link-color, #d4a95a); background: #fef9f0; }
+.drill-item:last-child { border-bottom: none; }
+.drill-dur { font-size: 12px; color: var(--text-secondary); flex-shrink: 0; width: 80px; white-space: nowrap; }
+.drill-body { flex: 1; min-width: 0; }
+.drill-content { font-size: 12px; color: var(--text-secondary); line-height: 1.4; word-break: break-word; }
+.drill-remark { font-size: 11px; color: #aaa; margin-top: 2px; }
+.drill-remark {
+  font-size: 11px; color: #aaa; margin-top: 3px;
+  padding-left: 2px;
+}
+.drill-del {
+  flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+  border: none; background: transparent; color: #ccc; font-size: 12px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.drill-del:hover { color: var(--red); background: rgba(199,91,91,0.08); }
+
+/* ─── Custom Confirm ─── */
+.confirm-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.2);
+  z-index: 300; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s;
+}
+.confirm-overlay.show { opacity: 1; }
+.confirm-box {
+  background: #fff; border-radius: 16px; padding: 20px 24px;
+  width: 280px; box-shadow: 0 8px 40px rgba(0,0,0,0.15); text-align: center;
+}
+.confirm-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.confirm-msg { font-size: 13px; color: #999; margin-bottom: 16px; line-height: 1.4; }
+.confirm-btns { display: flex; gap: 8px; }
+.confirm-btn { flex: 1; padding: 10px; border-radius: 12px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+.confirm-btn.cancel { background: #f0f0f0; color: #666; }
+.confirm-btn.ok { background: #666; color: #fff; }
+.confirm-btn.ok.full { flex: none; width: 100%; }
+.confirm-btn:active { opacity: 0.8; }
+
+/* ─── Empty State ─── */
+.empty { text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 14px; }
+.empty-icon { margin-bottom: 8px; opacity: 0.25; }
+.empty-icon svg { width: 40px; height: 40px; }
+
+/* ─── Toast ─── */
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  background: #444; color: #fff; padding: 10px 20px; border-radius: 20px;
+  font-size: 14px; font-weight: 500; z-index: 200;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.toast.show { opacity: 1; }
+
+/* ─── Animations ─── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Calendar -->
+  <div class="cal-bar" id="calBar">
+    <span class="cal-today" id="calToday" style="cursor:pointer;" title="回到今天"></span>
+    <span class="cal-toggle" id="calToggle">日历 ▾</span>
+  </div>
+  <div class="cal-panel" id="calPanel" style="display:none;">
+    <div class="cal-header">
+      <button class="cal-nav" id="calPrev">◂</button>
+      <span class="cal-month" id="calMonth"></span>
+      <button class="cal-nav" id="calNext">▸</button>
+    </div>
+    <div class="cal-weekdays">
+      <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-actions">
+      <div class="time-filter">
+        <input type="datetime-local" class="tf-input" id="tfStart">
+        <span class="tf-sep">至</span>
+        <input type="datetime-local" class="tf-input" id="tfEnd">
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Card -->
+  <div class="card">
+    <div class="input-row">
+      <input type="text" id="noteInput" placeholder="记点什么…" maxlength="500" autofocus>
+      <button class="input-clear" id="btnClear" title="清除">✕</button>
+      <button class="btn-primary" id="btnAdd">添加</button>
+    </div>
+    <div class="phrase-area" id="phraseArea"></div>
+  </div>
+
+  <!-- Interval Bar -->
+  <div class="interval-bar" id="intervalBar">
+    <div class="interval-row">
+      <span class="interval-time" id="intervalTime"></span>
+      <button class="btn-save" id="intervalSave">保存</button>
+    </div>
+    <div class="interval-row">
+      <div class="interval-cat-wrapper" id="intervalCatWrapper">
+        <div class="interval-cat interval-cat-full" id="intervalCat" tabindex="0">
+          <span class="interval-cat-text">请选择类目</span>
+        </div>
+        <div class="interval-cat-drop" id="intervalCatDrop"></div>
+      </div>
+    </div>
+    <div class="interval-row">
+      <input class="interval-remark interval-remark-full" id="intervalRemark" placeholder="备注…" maxlength="30">
+    </div>
+  </div>
+
+  <!-- Records -->
+  <div class="records" id="records"></div>
+
+  <!-- Statistics -->
+  <div class="stats-section show" id="statsSection">
+    <div class="stats-header">
+      <h3>时间统计</h3>
+      <span class="cat-mgr-btn" id="clearAllBtn" style="margin-left:12px;">清除耗时记录</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+        <span class="cat-mgr-btn" id="catMgrBtn">分类管理</span>
+      </div>
+    </div>
+    <div class="cat-mgr-panel" id="catMgrPanel" style="display:none;">
+      <div class="cat-mgr-list" id="catMgrList"></div>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <input class="cat-mgr-input" id="catMgrInput" placeholder="新分类名称…" maxlength="10">
+        <button class="btn-save" id="catMgrAdd">添加</button>
+      </div>
+    </div>
+    <div class="stats-summary" id="statsSummary"></div>
+    <div class="stats-bars" id="statsBars"></div>
+    <div class="stats-drill" id="statsDrill"></div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty" id="empty">
+    <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/></svg></div>
+    <div>还没有记录，写点什么吧</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+// Constants
+// ═══════════════════════════════════════
+const DEFAULT_CATEGORIES = ['工作', '学习', '生活', '运动', '娱乐', '其他'];
+const CAT_COLORS = {
+  '工作': { bar: '#7aa8d4' },
+  '学习': { bar: '#7ab88a' },
+  '生活': { bar: '#d4a95a' },
+  '运动': { bar: '#c97a7a' },
+  '娱乐': { bar: '#9a7dbf' },
+  '其他': { bar: '#aaaaaa' }
+};
+
+// ═══════════════════════════════════════
+// State
+// ═══════════════════════════════════════
+let categories = [...DEFAULT_CATEGORIES];
+let records = [];      // { id, content, ts }
+let intervals = [];    // { text, duration, category, remark, ts, idA, idB }
+let phrases = [];
+let selected = new Set();
+let drillCat = null;
+let usedIds = new Set();  // IDs of records already used in intervals
+let calDate = new Date(); // Current calendar month
+let filterDate = null;    // Date filter (YYYY-MM-DD), null = show all
+let filterStart = null;   // Range start
+let filterEnd = null;     // Range end
+
+// ═══════════════════════════════════════
+// Storage
+// ═══════════════════════════════════════
+function save() {
+  localStorage.setItem('nb_records', JSON.stringify(records));
+  localStorage.setItem('nb_intervals', JSON.stringify(intervals));
+  localStorage.setItem('nb_phrases', JSON.stringify(phrases));
+  localStorage.setItem('nb_categories', JSON.stringify(categories));
+}
+
+function load() {
+  try {
+    records = JSON.parse(localStorage.getItem('nb_records') || '[]');
+    // Ensure all records have an id
+    records.forEach(r => { if (!r.id) r.id = uid(); });
+    intervals = JSON.parse(localStorage.getItem('nb_intervals') || '[]');
+    phrases = JSON.parse(localStorage.getItem('nb_phrases') || '[]');
+    const savedCats = JSON.parse(localStorage.getItem('nb_categories') || 'null');
+    categories = (savedCats && Array.isArray(savedCats) && savedCats.length && savedCats[0])
+      ? savedCats.filter(Boolean) : [...DEFAULT_CATEGORIES];
+    if (!categories.length) categories = [...DEFAULT_CATEGORIES];
+  } catch { records = []; intervals = []; phrases = []; categories = [...DEFAULT_CATEGORIES]; }
+}
+
+// ═══════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════
+function now() { return new Date().toISOString(); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function localDate(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function fmtTimeInput(ts) {
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const M = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  return `${y}-${M}-${day}T${h}:${m}`;
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const M = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${y}-${M}-${day} ${h}:${m}:${s}`;
+}
+
+function fmtDurationMs(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const parts = [];
+  if (h > 0) parts.push(`${h}H`);
+  if (m > 0 || h > 0) parts.push(`${m}m`);
+  parts.push(`${s}s`);
+  return parts.join(' ');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ═══════════════════════════════════════
+// Render
+// ═══════════════════════════════════════
+function renderPhrases() {
+  const area = document.getElementById('phraseArea');
+  area.innerHTML = phrases.map(p =>
+    `<span class="phrase-tag" data-phrase="${escapeHtml(p)}">${escapeHtml(p)}<span class="del-phrase" data-del="${escapeHtml(p)}">✕</span></span>`
+  ).join('') + `<button class="phrase-add" id="btnPhraseAdd" title="添加短语">+</button>`;
+}
+
+function renderInterval() {
+  const bar = document.getElementById('intervalBar');
+  const catText = document.getElementById('intervalCat').querySelector('.interval-cat-text');
+  const catDrop = document.getElementById('intervalCatDrop');
+  const catWrapper = document.getElementById('intervalCatWrapper');
+
+  if (selected.size !== 2) {
+    bar.classList.remove('show');
+    return;
+  }
+  const [a, b] = [...selected].sort((x, y) => x - y);
+  const t1 = new Date(records[a].ts).getTime();
+  const t2 = new Date(records[b].ts).getTime();
+  const diff = Math.abs(t2 - t1);
+  const idxA = Math.min(a, b);
+  const idxB = Math.max(a, b);
+
+  document.getElementById('intervalTime').textContent = fmtDurationMs(diff);
+  document.getElementById('intervalRemark').value = '';
+  catText.textContent = '请选择类目';
+  catText.style.color = '';
+  catWrapper.dataset.value = '';
+  catDrop.innerHTML = categories.map(c => `
+    <div class="interval-cat-option" data-val="${c}">${c}</div>
+  `).join('');
+
+  bar._data = { diff, idxA, idxB };
+  bar.classList.add('show');
+}
+
+function renderRecords() {
+  const container = document.getElementById('records');
+  const emptyEl = document.getElementById('empty');
+
+  if (records.length === 0) {
+    container.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+
+  let filtered;
+  if (filterDate) {
+    filtered = records.map((r, i) => ({ r, i })).filter(({ r }) => localDate(r.ts) === filterDate);
+  } else if (filterStart && filterEnd) {
+    const startT = new Date(filterStart).getTime();
+    const endT = new Date(filterEnd).getTime();
+    filtered = records.map((r, i) => ({ r, i })).filter(({ r }) => {
+      const t = new Date(r.ts).getTime();
+      return t >= startT && t <= endT;
+    });
+  } else {
+    filtered = records.map((r, i) => ({ r, i }));
+  }
+
+  if (filtered.length === 0) {
+    emptyEl.style.display = 'block';
+    emptyEl.querySelector('div:last-child').textContent = filterDate ? '当天没有记录' : '还没有记录，写点什么吧';
+    container.innerHTML = '';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  container.innerHTML = filtered.map(({ r, i }) => `
+    <div class="record-item${selected.has(i) ? ' selected' : ''}${usedIds.has(r.id) ? ' used' : ''}" data-idx="${i}" data-rid="${r.id}">
+      <div class="select-circle" data-idx="${i}"></div>
+      <div class="record-body">
+        <div class="record-content">${escapeHtml(r.content)}</div>
+        <div class="record-meta">
+          <span class="record-time" data-idx="${i}" data-ts="${r.ts}">${fmtTime(r.ts)}</span>
+        </div>
+      </div>
+      <button class="record-del" data-del="${i}" title="删除">×</button>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════
+// Statistics
+// ═══════════════════════════════════════
+const BAR_PALETTE = ['#7aa8d4','#7ab88a','#d4a95a','#c97a7a','#9a7dbf','#e0927a','#6bada7','#b8a0d4','#d4a0a0','#8ab8c8'];
+
+function getBarColor(cat) {
+  if (CAT_COLORS[cat]) return CAT_COLORS[cat].bar;
+  const idx = categories.indexOf(cat);
+  return BAR_PALETTE[idx % BAR_PALETTE.length] || '#aaaaaa';
+}
+
+function renderStats() {
+  if (intervals.length === 0) {
+    document.getElementById('statsSummary').textContent = '暂无已保存的耗时记录';
+    document.getElementById('statsBars').innerHTML = '';
+    document.getElementById('statsDrill').classList.remove('show');
+    drillCat = null;
+    return;
+  }
+
+  const catMap = {};
+  categories.forEach(c => { catMap[c] = { count: 0, duration: 0, items: [] }; });
+
+  let totalDuration = 0;
+  intervals.forEach((iv, i) => {
+    const cat = iv.category || '其他';
+    if (!catMap[cat]) catMap[cat] = { count: 0, duration: 0, items: [] };
+    catMap[cat].count++;
+    catMap[cat].duration += iv.duration;
+    catMap[cat].items.push({ ...iv, idx: i });
+    totalDuration += iv.duration;
+  });
+
+  document.getElementById('statsSummary').textContent =
+    `共 ${intervals.length} 条耗时记录，合计 ${fmtDurationMs(totalDuration)}`;
+
+  const bars = document.getElementById('statsBars');
+  const maxDur = Math.max(...categories.map(c => catMap[c].duration), 1);
+  const sorted = categories
+    .map(c => ({ c, d: catMap[c], pct: totalDuration > 0 ? Math.round((catMap[c].duration / totalDuration) * 100) : 0 }))
+    .filter(s => s.d.count > 0)
+    .sort((a, b) => b.d.duration - a.d.duration);
+
+  // Auto-select first category with data
+  if (!drillCat) {
+    const first = sorted.find(s => s.d.count > 0);
+    if (first) drillCat = first.c;
+  }
+
+  bars.innerHTML = sorted.map(({ c, d, pct }) => {
+    const w = maxDur > 0 ? Math.max((d.duration / maxDur) * 100, d.count > 0 ? 4 : 0) : 0;
+    return `
+      <div class="stats-bar-row${drillCat === c ? ' active' : ''}" data-cat="${c}">
+        <div class="stats-bar-track">
+          <div class="stats-bar-fill" style="width:${w}%;background:${getBarColor(c)}"></div>
+        </div>
+        <div class="stats-bar-bottom">
+          <span class="stats-label">${c}</span>
+          <span class="stats-count">${d.count}条 ${fmtDurationMs(d.duration)} ${pct}%</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  renderDrill();
+}
+
+function renderDrill() {
+  const drill = document.getElementById('statsDrill');
+  if (!drillCat) { drill.classList.remove('show'); return; }
+
+  const items = intervals
+    .map((iv, i) => ({ ...iv, idx: i }))
+    .filter(iv => (iv.category || '其他') === drillCat);
+
+  drill.classList.add('show');
+  drill.innerHTML = `
+    <div class="stats-drill-header">${drillCat} 共${items.length}条耗时记录，合计 ${fmtDurationMs(items.reduce((s, iv) => s + iv.duration, 0))}</div>
+    ${items.map(iv => `
+      <div class="drill-item" data-ida="${iv.idA || ''}" data-idb="${iv.idB || ''}" data-color="${getBarColor(iv.category)}">
+        <span class="drill-dur">${fmtDurationMs(iv.duration)}</span>
+        <div class="drill-body">
+          <div class="drill-content">${escapeHtml(iv.text)}</div>
+          ${iv.remark ? `<div class="drill-remark">${escapeHtml(iv.remark)}</div>` : ''}
+        </div>
+        <button class="drill-del" onclick="event.stopPropagation();deleteInterval(${iv.idx})" title="删除">✕</button>
+      </div>
+    `).join('')}
+  `;
+}
+
+// ═══════════════════════════════════════
+// Actions
+// ═══════════════════════════════════════
+function addRecord() {
+  const input = document.getElementById('noteInput');
+  const text = input.value.trim();
+  if (!text) return;
+  records.unshift({ id: uid(), content: text, ts: now() });
+  input.value = '';
+  selected.clear();
+  save();
+  renderRecords();
+  renderCalendar();
+  renderInterval();
+  input.focus();
+}
+
+function deleteRecord(idx) {
+  showConfirm('确定删除', '确定删除这条记录？', () => {
+    const recId = records[idx].id;
+    records.splice(idx, 1);
+    selected.delete(idx);
+    usedIds.delete(recId);
+    // Remove intervals referencing the deleted record
+    intervals = intervals.filter(iv => iv.idA !== recId && iv.idB !== recId);
+    const newSel = new Set();
+    [...selected].forEach(i => { if (i > idx) newSel.add(i - 1); else newSel.add(i); });
+    selected = newSel;
+    save();
+    drillCat = null;
+    renderRecords();
+    renderCalendar();
+    renderInterval();
+    renderStats();
+  });
+}
+
+function toggleSelect(idx) {
+  const rec = records[idx];
+  if (rec && usedIds.has(rec.id)) return;
+  if (selected.has(idx)) { selected.delete(idx); }
+  else {
+    if (selected.size >= 2) { const first = [...selected][0]; selected.delete(first); }
+    selected.add(idx);
+  }
+  renderRecords();
+  renderInterval();
+}
+
+function saveInterval() {
+  const bar = document.getElementById('intervalBar');
+  if (!bar._data) return;
+  const category = document.getElementById('intervalCatWrapper').dataset.value;
+  if (!category) {
+    showConfirm('提示', '请先选择类目再保存', null, true);
+    return;
+  }
+  const { diff, idxA, idxB } = bar._data;
+  const remark = document.getElementById('intervalRemark').value.trim();
+  // Order by time: earlier event first
+  const tA = new Date(records[idxA].ts).getTime();
+  const tB = new Date(records[idxB].ts).getTime();
+  const early = tA <= tB ? idxA : idxB;
+  const late = tA <= tB ? idxB : idxA;
+  const text = records[early].content.slice(0, 16) + ' → ' + records[late].content.slice(0, 16);
+  const idA = records[idxA].id;
+  const idB = records[idxB].id;
+
+  intervals.unshift({ text, duration: diff, category, remark, ts: now(), idA, idB });
+  usedIds.add(idA);
+  usedIds.add(idB);
+  save();
+  selected.clear();
+  drillCat = null;
+  renderRecords();
+  renderInterval();
+  renderStats();
+  document.getElementById('statsSection').classList.add('show');
+  toast('已保存');
+}
+
+function rebuildUsed() {
+  usedIds.clear();
+  intervals.forEach(iv => {
+    if (iv.idA) usedIds.add(iv.idA);
+    if (iv.idB) usedIds.add(iv.idB);
+  });
+}
+
+function deleteInterval(idx) {
+  showConfirm('确定删除', '确定删除这条耗时记录？', () => {
+    intervals.splice(idx, 1);
+    rebuildUsed();
+    save();
+    drillCat = null;
+    renderStats();
+    renderRecords();
+    if (intervals.length === 0) {
+      document.getElementById('statsSection').classList.remove('show');
+    }
+  });
+}
+
+function showConfirm(title, msg, onOk, infoOnly) {
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  overlay.innerHTML = `
+    <div class="confirm-box">
+      <div class="confirm-title">${title}</div>
+      <div class="confirm-msg">${msg}</div>
+      <div class="confirm-btns">
+        ${infoOnly ? '' : '<button class="confirm-btn cancel">取消</button>'}
+        <button class="confirm-btn ok">${infoOnly ? '知道了' : '确定'}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('show'));
+
+  const close = () => overlay.remove();
+  const cancelBtn = overlay.querySelector('.cancel');
+  if (cancelBtn) cancelBtn.onclick = close;
+  overlay.querySelector('.ok').onclick = () => { overlay.remove(); if (onOk) onOk(); };
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
+function addCategory(name) {
+  name = name.trim();
+  if (!name || categories.includes(name)) return false;
+  categories.push(name);
+  save();
+  return true;
+}
+
+function renameCategory(oldName, newName) {
+  newName = newName.trim();
+  if (!newName || (oldName !== newName && categories.includes(newName))) return false;
+  const idx = categories.indexOf(oldName);
+  if (idx === -1) return false;
+  categories[idx] = newName;
+  // Update all intervals referencing the old name
+  intervals.forEach(iv => { if (iv.category === oldName) iv.category = newName; });
+  save();
+  return true;
+}
+
+function deleteCategory(name) {
+  if (categories.length <= 1) { toast('至少保留一个分类'); return false; }
+  categories = categories.filter(c => c !== name);
+  // Move intervals under this category to the first remaining one
+  intervals.forEach(iv => { if (iv.category === name) iv.category = categories[0]; });
+  save();
+  return true;
+}
+
+function addPhrase(text) {
+  text = text.trim();
+  if (!text || phrases.includes(text)) return;
+  phrases.push(text);
+  save();
+  renderPhrases();
+}
+
+function deletePhrase(text) {
+  phrases = phrases.filter(p => p !== text);
+  save();
+  renderPhrases();
+}
+
+// ═══════════════════════════════════════
+// Phrase Drag-to-Reorder
+// ═══════════════════════════════════════
+let dragState = { active: false, idx: -1, moved: false };
+const LONG_PRESS = 400;
+
+function initPhraseDrag() {
+  const area = document.getElementById('phraseArea');
+
+  area.addEventListener('pointerdown', e => {
+    const tag = e.target.closest('.phrase-tag');
+    if (!tag || e.target.closest('.del-phrase')) return;
+    const tags = [...area.querySelectorAll('.phrase-tag')];
+    const idx = tags.indexOf(tag);
+    if (idx === -1) return;
+    dragState.idx = idx; dragState.moved = false;
+    dragState.startX = e.clientX; dragState.startY = e.clientY;
+    dragState.timer = setTimeout(() => {
+      dragState.active = true;
+      tag.classList.add('dragging');
+      tag.setPointerCapture(e.pointerId);
+    }, LONG_PRESS);
+  });
+
+  area.addEventListener('pointermove', e => {
+    if (!dragState.active) {
+      if (dragState.timer) {
+        const dx = e.clientX - dragState.startX;
+        const dy = e.clientY - dragState.startY;
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) { clearTimeout(dragState.timer); dragState.timer = null; }
+      }
+      return;
+    }
+    dragState.moved = true;
+    const tags = [...area.querySelectorAll('.phrase-tag')];
+    tags.forEach(t => t.classList.remove('drag-over'));
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    const overTag = target ? target.closest('.phrase-tag') : null;
+    if (overTag && !overTag.classList.contains('dragging')) overTag.classList.add('drag-over');
+  });
+
+  area.addEventListener('pointerup', e => {
+    clearTimeout(dragState.timer); dragState.timer = null;
+    if (!dragState.active) return;
+    dragState.active = false;
+    const tags = [...area.querySelectorAll('.phrase-tag')];
+    tags.forEach(t => { t.classList.remove('dragging', 'drag-over'); t.releasePointerCapture?.(e.pointerId); });
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    const overTag = target ? target.closest('.phrase-tag') : null;
+    if (overTag && dragState.moved) {
+      const toIdx = tags.indexOf(overTag);
+      if (toIdx !== -1 && toIdx !== dragState.idx) {
+        const [moved] = phrases.splice(dragState.idx, 1);
+        phrases.splice(toIdx, 0, moved);
+        save(); renderPhrases(); initPhraseDrag();
+      }
+    }
+    dragState.idx = -1; dragState.moved = false;
+  });
+
+  area.addEventListener('pointercancel', () => {
+    clearTimeout(dragState.timer);
+    dragState.active = false; dragState.moved = false;
+    [...area.querySelectorAll('.phrase-tag')].forEach(t => t.classList.remove('dragging', 'drag-over'));
+  });
+}
+
+document.getElementById('phraseArea').addEventListener('click', e => {
+  if (dragState.moved) { e.stopPropagation(); e.preventDefault(); dragState.moved = false; }
+}, true);
+
+// ═══════════════════════════════════════
+// Track last focused input for phrase insertion
+// ═══════════════════════════════════════
+let lastFocusedInput = null;
+document.addEventListener('focusin', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    lastFocusedInput = e.target;
+  }
+});
+// ═══════════════════════════════════════
+document.getElementById('btnAdd').addEventListener('click', addRecord);
+document.getElementById('noteInput').addEventListener('keydown', e => { if (e.key === 'Enter') addRecord(); });
+document.getElementById('btnClear').addEventListener('click', () => {
+  document.getElementById('noteInput').value = '';
+  document.getElementById('noteInput').focus();
+});
+
+// Phrase area clicks
+document.getElementById('phraseArea').addEventListener('click', e => {
+  const tag = e.target.closest('.phrase-tag');
+  const del = e.target.closest('.del-phrase');
+  if (del) {
+    const text = del.dataset.del;
+    showConfirm('删除短语', `确定删除快捷短语「${text}」？`, () => {
+      deletePhrase(text);
+    });
+    return;
+  }
+  if (tag) {
+    const phrase = tag.dataset.phrase;
+    const target = lastFocusedInput || document.getElementById('noteInput');
+    const start = target.selectionStart ?? target.value.length;
+    const end = target.selectionEnd ?? start;
+    target.value = target.value.slice(0, start) + phrase + target.value.slice(end);
+    target.selectionStart = target.selectionEnd = start + phrase.length;
+    target.focus();
+    const wasActive = tag.classList.contains('active');
+    document.querySelectorAll('.phrase-tag.active').forEach(t => t.classList.remove('active'));
+    if (!wasActive) tag.classList.add('active');
+    return;
+  }
+  const addBtn = e.target.closest('#btnPhraseAdd');
+  if (addBtn) {
+    const input = document.getElementById('noteInput');
+    const text = input.value.trim();
+    if (text) { addPhrase(text); input.value = ''; toast('已添加短语'); }
+  }
+});
+
+// Record list clicks
+document.getElementById('records').addEventListener('click', e => {
+  // Content edit
+  const contentEl = e.target.closest('.record-content');
+  if (contentEl) {
+    const item = contentEl.closest('.record-item');
+    const idx = parseInt(item.dataset.idx);
+    const text = records[idx].content;
+    const input = document.createElement('textarea');
+    input.className = 'record-content-input';
+    input.value = text;
+    input.style.height = contentEl.offsetHeight + 'px';
+    contentEl.replaceWith(input);
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+    const done = () => {
+      const newText = input.value.trim();
+      if (newText && newText !== text) {
+        records[idx].content = newText;
+        intervals.forEach(iv => {
+          if (iv.idA === records[idx].id || iv.idB === records[idx].id) {
+            const rA = records.find(r => r.id === iv.idA);
+            const rB = records.find(r => r.id === iv.idB);
+            if (rA && rB) {
+              const earlyR = new Date(rA.ts) <= new Date(rB.ts) ? rA : rB;
+              const lateR = new Date(rA.ts) <= new Date(rB.ts) ? rB : rA;
+              iv.text = earlyR.content.slice(0, 16) + ' → ' + lateR.content.slice(0, 16);
+            }
+          }
+        });
+        save(); renderRecords(); renderStats();
+      } else {
+        const span = document.createElement('div');
+        span.className = 'record-content';
+        span.textContent = text;
+        input.replaceWith(span);
+      }
+    };
+    input.addEventListener('blur', done);
+    input.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); input.blur(); } });
+    return;
+  }
+  const circle = e.target.closest('.select-circle');
+  if (circle) { toggleSelect(parseInt(circle.dataset.idx)); return; }
+  const delBtn = e.target.closest('.record-del');
+  if (delBtn) { deleteRecord(parseInt(delBtn.dataset.del)); return; }
+  const item = e.target.closest('.record-item');
+  if (item) {
+    const wasActive = item.classList.contains('active');
+    document.querySelectorAll('.record-item.active').forEach(el => el.classList.remove('active'));
+    if (!wasActive) item.classList.add('active');
+  }
+});
+
+// Record time edit
+document.getElementById('records').addEventListener('click', e => {
+  const timeSpan = e.target.closest('.record-time');
+  if (!timeSpan) return;
+  const idx = parseInt(timeSpan.dataset.idx);
+  const ts = timeSpan.dataset.ts;
+
+  // Replace span with datetime-local input
+  const input = document.createElement('input');
+  input.type = 'datetime-local';
+  input.className = 'record-time-input';
+  input.value = fmtTimeInput(ts);
+  input.dataset.idx = idx;
+  timeSpan.replaceWith(input);
+  input.focus();
+
+  // On blur or change, save and convert back to span
+  const done = () => {
+    const d = new Date(input.value);
+    if (!isNaN(d.getTime())) {
+      const recId = records[idx].id;
+      records[idx].ts = d.toISOString();
+      records.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+      // Recalculate durations for intervals referencing this record
+      const recMap = {};
+      records.forEach(r => { recMap[r.id] = r; });
+      intervals.forEach(iv => {
+        if (iv.idA === recId || iv.idB === recId) {
+          const rA = recMap[iv.idA];
+          const rB = recMap[iv.idB];
+          if (rA && rB) {
+            iv.duration = Math.abs(new Date(rB.ts) - new Date(rA.ts));
+            const earlyR = new Date(rA.ts) <= new Date(rB.ts) ? rA : rB;
+            const lateR = new Date(rA.ts) <= new Date(rB.ts) ? rB : rA;
+            iv.text = earlyR.content.slice(0, 16) + ' → ' + lateR.content.slice(0, 16);
+          }
+        }
+      });
+      selected.clear();
+      save();
+      drillCat = null;
+      renderRecords();
+      renderInterval();
+      renderStats();
+    } else {
+      const span = document.createElement('span');
+      span.className = 'record-time';
+      span.dataset.idx = idx;
+      span.dataset.ts = ts;
+      span.textContent = fmtTime(ts);
+      input.replaceWith(span);
+    }
+  };
+  input.addEventListener('change', done);
+  input.addEventListener('blur', done);
+});
+
+// Interval save
+document.getElementById('intervalSave').addEventListener('click', saveInterval);
+
+// Custom category dropdown
+const catDrop = document.getElementById('intervalCatDrop');
+const catTrigger = document.getElementById('intervalCat');
+const catWrapper = document.getElementById('intervalCatWrapper');
+
+catTrigger.addEventListener('click', e => {
+  e.stopPropagation();
+  catDrop.classList.toggle('show');
+});
+
+catDrop.addEventListener('click', e => {
+  const opt = e.target.closest('.interval-cat-option');
+  if (!opt) return;
+  const val = opt.dataset.val;
+  catWrapper.dataset.value = val;
+  catTrigger.querySelector('.interval-cat-text').textContent = val;
+  catTrigger.querySelector('.interval-cat-text').style.color = 'var(--text)';
+  catDrop.classList.remove('show');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!catWrapper.contains(e.target)) {
+    catDrop.classList.remove('show');
+  }
+});
+
+// Statistics toggle
+// Category management
+function renderCatMgr() {
+  const list = document.getElementById('catMgrList');
+  list.innerHTML = categories.map(c => `
+    <span class="cat-mgr-item">
+      <input value="${escapeHtml(c)}" data-old="${escapeHtml(c)}" maxlength="10">
+      <button data-del="${escapeHtml(c)}" title="删除">✕</button>
+    </span>
+  `).join('');
+  // Auto-size inputs to content
+  list.querySelectorAll('input').forEach(inp => {
+    const span = document.createElement('span');
+    span.style.cssText = 'visibility:hidden;position:absolute;font-size:11px;font-family:Microsoft YaHei,微软雅黑,sans-serif;white-space:pre;';
+    span.textContent = inp.value || inp.placeholder || '';
+    document.body.appendChild(span);
+    inp.style.width = Math.max(span.offsetWidth + 4, 24) + 'px';
+    span.remove();
+  });
+}
+
+document.getElementById('catMgrBtn').addEventListener('click', () => {
+  const panel = document.getElementById('catMgrPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (panel.style.display === 'block') { renderCatMgr(); initCatDrag(); }
+});
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  if (intervals.length === 0) { toast('暂无耗时记录'); return; }
+  showConfirm('清除耗时记录', `确定清除全部 ${intervals.length} 条耗时记录？`, () => {
+    intervals = [];
+    usedIds.clear();
+    save();
+    renderStats();
+    renderRecords();
+    document.getElementById('statsSection').classList.remove('show');
+    document.getElementById('statsSection').classList.remove('show');
+    drillCat = null;
+  });
+});
+
+document.getElementById('catMgrAdd').addEventListener('click', () => {
+  const input = document.getElementById('catMgrInput');
+  if (addCategory(input.value)) { input.value = ''; renderCatMgr(); renderStats(); }
+  else if (input.value.trim()) toast('分类已存在或名称无效');
+});
+
+document.getElementById('catMgrInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('catMgrAdd').click();
+});
+
+// Category manager: click delete
+document.getElementById('catMgrList').addEventListener('click', e => {
+  if (catDragState.moved) { e.stopPropagation(); e.preventDefault(); catDragState.moved = false; return; }
+  const delBtn = e.target.closest('button[data-del]');
+  if (delBtn) {
+    const name = delBtn.dataset.del;
+    showConfirm('删除分类', `确定删除「${name}」分类？该分类下的耗时记录将移入「${categories[0]}」。`, () => {
+      deleteCategory(name); renderCatMgr(); renderStats();
+    });
+  }
+});
+
+// Category manager: rename on change
+document.getElementById('catMgrList').addEventListener('change', e => {
+  if (e.target.tagName === 'INPUT') {
+    const oldName = e.target.dataset.old;
+    const newName = e.target.value.trim();
+    if (newName && renameCategory(oldName, newName)) {
+      e.target.dataset.old = newName; renderCatMgr(); renderStats();
+    }
+  }
+});
+
+// Category manager: drag-to-reorder
+let catDragState = { active: false, idx: -1, moved: false };
+
+function initCatDrag() {
+  const list = document.getElementById('catMgrList');
+  if (!list) return;
+
+  list.addEventListener('pointerdown', e => {
+    const item = e.target.closest('.cat-mgr-item');
+    if (!item || e.target.closest('button')) return;
+    const items = [...list.querySelectorAll('.cat-mgr-item')];
+    const idx = items.indexOf(item);
+    if (idx === -1) return;
+    catDragState.idx = idx; catDragState.moved = false;
+    catDragState.startX = e.clientX; catDragState.startY = e.clientY;
+    catDragState.timer = setTimeout(() => {
+      catDragState.active = true;
+      item.classList.add('dragging');
+      item.setPointerCapture(e.pointerId);
+    }, LONG_PRESS);
+  });
+
+  list.addEventListener('pointermove', e => {
+    if (!catDragState.active) {
+      if (catDragState.timer) {
+        const dx = e.clientX - (catDragState.startX || 0);
+        const dy = e.clientY - (catDragState.startY || 0);
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) { clearTimeout(catDragState.timer); catDragState.timer = null; }
+      }
+      return;
+    }
+    catDragState.moved = true;
+    const items = [...list.querySelectorAll('.cat-mgr-item')];
+    items.forEach(t => t.classList.remove('drag-over'));
+    const overItem = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cat-mgr-item');
+    if (overItem && !overItem.classList.contains('dragging')) overItem.classList.add('drag-over');
+  });
+
+  list.addEventListener('pointerup', e => {
+    clearTimeout(catDragState.timer); catDragState.timer = null;
+    if (!catDragState.active) return;
+    catDragState.active = false;
+    const items = [...list.querySelectorAll('.cat-mgr-item')];
+    items.forEach(t => { t.classList.remove('dragging', 'drag-over'); t.releasePointerCapture?.(e.pointerId); });
+    const overItem = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cat-mgr-item');
+    if (overItem && catDragState.moved) {
+      const toIdx = items.indexOf(overItem);
+      if (toIdx !== -1 && toIdx !== catDragState.idx) {
+        const [moved] = categories.splice(catDragState.idx, 1);
+        categories.splice(toIdx, 0, moved);
+        save(); renderCatMgr(); renderStats(); initCatDrag();
+      }
+    }
+    catDragState.idx = -1; catDragState.moved = false;
+  });
+
+  list.addEventListener('pointercancel', () => {
+    clearTimeout(catDragState.timer);
+    catDragState.active = false; catDragState.moved = false;
+    [...list.querySelectorAll('.cat-mgr-item')].forEach(t => t.classList.remove('dragging', 'drag-over'));
+  });
+}
+
+// Drill hover → highlight linked records with category color
+document.getElementById('statsDrill').addEventListener('mouseover', e => {
+  const item = e.target.closest('.drill-item');
+  if (!item) return;
+  const idA = item.dataset.ida;
+  const idB = item.dataset.idb;
+  const color = item.dataset.color || '#d4a95a';
+  item.style.setProperty('--link-color', color);
+  document.querySelectorAll('.record-item[data-rid]').forEach(el => {
+    const rid = el.dataset.rid;
+    if (rid === idA || rid === idB) {
+      el.style.setProperty('--link-color', color);
+      el.classList.add('linked');
+    }
+  });
+});
+
+document.getElementById('statsDrill').addEventListener('mouseout', e => {
+  const item = e.target.closest('.drill-item');
+  if (!item) return;
+  document.querySelectorAll('.record-item.linked').forEach(el => el.classList.remove('linked'));
+});
+
+// Stats bar click → drill down
+document.getElementById('statsBars').addEventListener('click', e => {
+  const row = e.target.closest('.stats-bar-row');
+  if (!row) return;
+  drillCat = (drillCat === row.dataset.cat) ? null : row.dataset.cat;
+  renderStats();
+});
+
+// Deactivate when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.phrase-tag') && !e.target.closest('.record-item')) {
+    document.querySelectorAll('.phrase-tag.active').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.record-item.active').forEach(el => el.classList.remove('active'));
+  }
+});
+
+// ═══════════════════════════════════════
+// Calendar
+// ═══════════════════════════════════════
+function renderCalendar() {
+  const y = calDate.getFullYear();
+  const m = calDate.getMonth();
+  document.getElementById('calMonth').textContent = `${y}年${m + 1}月`;
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  // Show current filter in cal bar
+  let filterLabel;
+  if (filterDate) {
+    filterLabel = filterDate;
+  } else if (filterStart && filterEnd) {
+    filterLabel = `${filterStart.slice(0,16).replace('T',' ')} 至 ${filterEnd.slice(0,16).replace('T',' ')}`;
+  } else {
+    filterLabel = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  }
+  document.getElementById('calToday').textContent = filterLabel;
+
+  const recDays = new Set();
+  records.forEach(r => { recDays.add(localDate(r.ts)); });
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate();
+
+  let html = '';
+  for (let i = firstDay - 1; i >= 0; i--) {
+    html += `<div class="cal-cell other">${prevDays - i}</div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let cls = 'cal-cell';
+    if (ds === todayStr) cls += ' today';
+    if (recDays.has(ds)) cls += ' has-records';
+    if (filterDate === ds) cls += ' selected';
+    html += `<div class="${cls}" data-date="${ds}">${d}</div>`;
+  }
+  const total = firstDay + daysInMonth;
+  const remaining = total <= 35 ? 35 - total : 42 - total;
+  for (let d = 1; d <= remaining; d++) {
+    html += `<div class="cal-cell other">${d}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+document.getElementById('calToday').addEventListener('click', () => {
+  const today = new Date();
+  filterDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  filterStart = null; filterEnd = null;
+  document.getElementById('tfStart').value = '';
+  document.getElementById('tfEnd').value = '';
+  calDate = new Date();
+  document.getElementById('empty').querySelector('div:last-child').textContent = '还没有记录，写点什么吧';
+  renderCalendar();
+  renderRecords();
+});
+
+document.getElementById('calToggle').addEventListener('click', () => {
+  const panel = document.getElementById('calPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (panel.style.display === 'block') renderCalendar();
+});
+
+document.getElementById('calPrev').addEventListener('click', () => {
+  calDate = new Date(calDate.getFullYear(), calDate.getMonth() - 1);
+  renderCalendar();
+});
+
+document.getElementById('calNext').addEventListener('click', () => {
+  calDate = new Date(calDate.getFullYear(), calDate.getMonth() + 1);
+  renderCalendar();
+});
+
+document.getElementById('calGrid').addEventListener('click', e => {
+  const cell = e.target.closest('.cal-cell');
+  if (!cell || cell.classList.contains('other')) return;
+  filterDate = cell.dataset.date;
+  filterStart = null; filterEnd = null;
+  document.getElementById('tfStart').value = '';
+  document.getElementById('tfEnd').value = '';
+  renderCalendar();
+  renderRecords();
+});
+
+// Time filter - auto apply on change
+document.getElementById('tfStart').addEventListener('change', () => {
+  filterStart = document.getElementById('tfStart').value;
+  filterEnd = document.getElementById('tfEnd').value;
+  filterDate = null;
+  if (filterStart || filterEnd) {
+    renderCalendar();
+    renderRecords();
+  }
+});
+
+document.getElementById('tfEnd').addEventListener('change', () => {
+  filterStart = document.getElementById('tfStart').value;
+  filterEnd = document.getElementById('tfEnd').value;
+  filterDate = null;
+  if (filterStart || filterEnd) {
+    renderCalendar();
+    renderRecords();
+  }
+});
+
+// ═══════════════════════════════════════
+// Init
+// ═══════════════════════════════════════
+load();
+// Fix corrupted categories data from previous bug
+if (!categories.length || categories.some(c => !c || typeof c !== 'string')) {
+  categories = [...DEFAULT_CATEGORIES];
+  save();
+}
+rebuildUsed();
+renderPhrases();
+initPhraseDrag();
+renderRecords();
+renderCalendar();
+renderInterval();
+renderStats();
+document.getElementById('noteInput').focus();
+</script>
+</body>
+</html>
